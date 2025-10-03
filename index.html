@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>풍성한 한가위</title>
+    <title>커서 인터랙티브 이미지 시퀀스</title>
     <style>
         * {
             margin: 0;
@@ -15,7 +15,7 @@
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-            background: #CFCFCF;
+            background: #ffffff;
             font-family: 'Arial', sans-serif;
             touch-action: none;
         }
@@ -156,7 +156,8 @@
             for (let i = 1; i <= totalFrames; i++) {
                 const img = new Image();
                 const frameNumber = String(i).padStart(4, '0');
-                img.src = `image/0929_차${frameNumber}.png`;
+                const fileName = `0929_차${frameNumber}.png`;
+                img.src = `image/${encodeURIComponent(fileName)}`;
                 
                 img.onload = () => {
                     loadedCount++;

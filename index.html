@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>풍성한 한가위</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #CFCFCF;
+            font-family: 'Arial', sans-serif;
+            touch-action: none;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #333;
+            font-size: 24px;
+            z-index: 200;
+            text-align: center;
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        #loadingText {
+            margin-top: 15px;
+            font-size: 18px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="loading">
+        <div>이미지 로딩중...</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div id="loadingText">0 / 39</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const loading = document.getElementById('loading');
+        const progressFill = document.getElementById('progressFill');
+        const loadingText = document.getElementById('loadingText');
+
+        let images = [];
+        let currentFrame = 0;
+        const totalFrames = 39;
+        let imagesLoaded = false;
+        let loadedCount = 0;
+
+        // 터치 시작 위치
+        let touchStartX = 0;
+
+        // 프레임 그리기
+        function drawFrame() {
+            if (!imagesLoaded || images.length === 0) return;
+
+            const img = images[currentFrame];
+            if (img && img.complete && img.naturalHeight !== 0) {
+                // 이미지 크기에 맞게 캔버스 설정
+                const scale = Math.min(
+                    window.innerWidth / img.width,
+                    window.innerHeight / img.height
+                );
+                
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // 마우스 이동 (데스크톱)
+        document.addEventListener('mousemove', (e) => {
+            if (imagesLoaded) {
+                const progress = e.clientX / window.innerWidth;
+                currentFrame = Math.floor(progress * (totalFrames - 1));
+                drawFrame();
+            }
+        });
+
+        // 터치 시작 (모바일)
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+
+        // 터치 이동 (모바일)
+        document.addEventListener('touchmove', (e) => {
+            if (imagesLoaded) {
+                const touchX = e.touches[0].clientX;
+                const progress = touchX / window.innerWidth;
+                currentFrame = Math.floor(progress * (totalFrames - 1));
+                drawFrame();
+            }
+        }, { passive: true });
+
+        // 화면 크기 변경
+        window.addEventListener('resize', () => {
+            if (imagesLoaded) {
+                drawFrame();
+            }
+        });
+
+        // 로딩 진행률 업데이트
+        function updateProgress() {
+            const progress = (loadedCount / totalFrames) * 100;
+            progressFill.style.width = progress + '%';
+            loadingText.textContent = `${loadedCount} / ${totalFrames}`;
+        }
+
+        // 이미지 로드
+        function loadImages() {
+            for (let i = 1; i <= totalFrames; i++) {
+                const img = new Image();
+                const frameNumber = String(i).padStart(4, '0');
+                img.src = `image/0929_차${frameNumber}.png`;
+                
+                img.onload = () => {
+                    loadedCount++;
+                    updateProgress();
+                    
+                    if (loadedCount === totalFrames) {
+                        imagesLoaded = true;
+                        loading.classList.add('hidden');
+                        drawFrame();
+                    }
+                };
+
+                img.onerror = () => {
+                    console.error(`이미지 로드 실패: image/0929_차${frameNumber}.png`);
+                    loadedCount++;
+                    updateProgress();
+                    
+                    if (loadedCount === totalFrames) {
+                        imagesLoaded = true;
+                        loading.classList.add('hidden');
+                        if (images.some(img => img.complete && img.naturalHeight !== 0)) {
+                            drawFrame();
+                        } else {
+                            alert('이미지 파일을 찾을 수 없습니다.\n이미지 파일이 image 폴더에 있는지 확인해주세요.');
+                        }
+                    }
+                };
+
+                images.push(img);
+            }
+        }
+
+        // 이미지 로드 시작
+        loadImages();
+    </script>
+</body>
+</html>
